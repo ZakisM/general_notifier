@@ -1,0 +1,16 @@
+[package]
+name = "general_notifier"
+version = "0.1.0"
+authors = ["zak <zakmikellides@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "sqlite"] }
+reqwest = { version = "0.11", features = ["rustls-tls"] }
+anyhow = "1.0"
+dotenv = "0.15"
+log = "0.4"
+pretty_env_logger = "0.4"
