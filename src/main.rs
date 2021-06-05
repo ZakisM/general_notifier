@@ -25,6 +25,20 @@ async fn main() -> Result<()> {
 
     migrations.run(&pool).await?;
 
+    let mut conn = pool.acquire().await?;
+
+    let row_id = sqlx::query!(
+        "INSERT INTO user (hashed_token, discord_id, discord_name) VALUES ( ?1, ?2, ?3 )",
+        "abc123",
+        "Zak123",
+        "Zak"
+    )
+    .execute(&mut conn)
+    .await?
+    .last_insert_rowid();
+
+    info!("Inserted into: {}", row_id);
+
     let client = Client::new();
 
     let res = client
