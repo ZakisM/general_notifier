@@ -1,59 +1,71 @@
 #[macro_use]
-extern crate log;
+extern crate tracing;
 
 use std::env;
+use std::path::Path;
+use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::Result;
-use reqwest::Client;
-use sqlx::sqlite::SqlitePoolOptions;
+use reqwest::ClientBuilder;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::ConnectOptions;
+
+mod conduit;
+mod discord;
+mod models;
+mod util;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv()?;
+
     env::set_var("RUST_LOG", "INFO");
 
-    pretty_env_logger::init_timed();
+    tracing_subscriber::fmt::init();
 
-    let migrations = sqlx::migrate::Migrator::new(std::path::Path::new("./migrations")).await?;
+    let migrations = sqlx::migrate::Migrator::new(Path::new("./migrations")).await?;
 
     let database_url = env::var("DATABASE_URL")?;
 
-    let pool = SqlitePoolOptions::new()
-        .max_connections(15)
-        .connect(&database_url)
-        .await?;
+    let mut connect_options = SqliteConnectOptions::from_str(&database_url)?;
+    connect_options.disable_statement_logging();
 
-    migrations.run(&pool).await?;
+    let pool = Arc::new(
+        SqlitePoolOptions::new()
+            .max_connections(15)
+            .connect_with(connect_options)
+            .await?,
+    );
 
-    let mut conn = pool.acquire().await?;
+    migrations.run(&*pool).await?;
 
-    let row_id = sqlx::query!(
-        "INSERT INTO user (hashed_token, discord_id, discord_name) VALUES ( ?1, ?2, ?3 )",
-        "abc123",
-        "Zak123",
-        "Zak"
-    )
-    .execute(&mut conn)
-    .await?
-    .last_insert_rowid();
+    // let user = User::new("abc123", 12345, "Zak");
+    //
+    // conduit::user::insert(&pool, user).await?;
 
-    info!("Inserted into: {}", row_id);
+    let client = ClientBuilder::new()
+        .brotli(true)
+        .cookie_store(true)
+        .build()?;
 
-    let client = Client::new();
+    // let res = client
+    //     .get("https://www.amazon.co.uk/s?k=lg+27gp950-b&ref=nb_sb_noss_1")
+    //     .send()
+    //     .await?
+    //     .text()
+    //     .await?;
+    //
+    // dbg!(&res);
 
-    let res = client
-        .get("https://changelogs.ubuntu.com/meta-release")
-        .send()
-        .await?
-        .text()
-        .await?;
+    // if res
+    //     .lines()
+    //     .any(|l| l.to_lowercase().contains("version: 21.04"))
+    // {
+    //     info!("Found");
+    // }
 
-    if res
-        .lines()
-        .any(|l| l.to_lowercase().contains("version: 21.04"))
-    {
-        info!("Found");
-    }
+    tokio::task::block_in_place(|| discord::start(pool.clone())).await?;
 
     Ok(())
 }
