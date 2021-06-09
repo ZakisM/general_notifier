@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use anyhow::Context as ErrorContext;
 use anyhow::Result;
-use comfy_table::presets::UTF8_BORDERS_ONLY;
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ColumnConstraint, Table};
 use serenity::async_trait;
 use serenity::client::{Client, Context, EventHandler};
@@ -58,12 +59,12 @@ async fn send_error_to_user(
 #[hook]
 async fn after(ctx: &Context, msg: &Message, command_name: &str, command_result: CommandResult) {
     match command_result {
-        Ok(_) => info!("Processed command '{}'", command_name),
+        Ok(_) => info!("Processed command: '{}'", command_name),
         Err(ref e) => {
-            error!("Command '{}' returned error {:?}", command_name, e);
+            error!("Command '{}' returned error: {:?}", command_name, e);
 
             if let Err(e) = send_error_to_user(ctx, msg, command_name, e).await {
-                error!("Failed to send error to user {:?}", e);
+                error!("Failed to send error to user: {:?}", e);
             }
         }
     }
@@ -98,13 +99,15 @@ async fn add(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
     let mut args = args.raw_quoted();
 
-    let alert = Alert::from_args(&mut args, msg.author.id.0)?;
-
     let data = ctx.data.read().await;
 
     let pool = data
         .get::<Database>()
         .context("Failed to read Database pool.")?;
+
+    let alert_count = conduit::alert::count(pool, msg.author.id.0).await?;
+
+    let alert = Alert::from_args(&mut args, msg.author.id.0, alert_count + 1)?;
 
     conduit::alert::insert(pool, alert).await?;
 
@@ -131,11 +134,12 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut table = Table::new();
     table
-        .load_preset(UTF8_BORDERS_ONLY)
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
         .set_header(vec!["", "URL", "Matching Text"]);
 
-    alerts.into_iter().enumerate().for_each(|(i, a)| {
-        table.add_row(vec![format!("{}.", i + 1), a.url, a.matching_text]);
+    alerts.into_iter().for_each(|a| {
+        table.add_row(vec![format!("{}.", a.alert_number), a.url, a.matching_text]);
     });
 
     let column = table
@@ -145,7 +149,7 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     column.set_constraint(ColumnConstraint::MaxWidth(100));
 
     let mut response = MessageBuilder::new();
-    response.push_mono_line_safe(table);
+    response.push_codeblock_safe(table, None);
 
     dm_channel
         .send_message(ctx, |m| m.content(response))
@@ -156,5 +160,25 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let dm_channel = msg.author.id.create_dm_channel(&ctx).await?;
+
+    let mut args = args.raw_quoted();
+
+    let data = ctx.data.read().await;
+
+    let pool = data
+        .get::<Database>()
+        .context("Failed to read Database pool.")?;
+
+    let alert_number = args.next().context("Missing alert number")?.parse()?;
+
+    conduit::alert::delete(pool, msg.author.id.0, alert_number).await?;
+
+    dm_channel
+        .send_message(ctx, |m| {
+            m.content("Successfully deleted alert! Use ~list to see your current alerts")
+        })
+        .await?;
+
     Ok(())
 }
