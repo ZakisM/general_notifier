@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  backend:
+    image: zakism/general-notifier:latest
+    environment:
+      - DISCORD_TOKEN=$DISCORD_TOKEN
+    volumes:
+      - ./general_notifier_data:/data

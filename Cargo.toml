@@ -1,16 +1,36 @@
 [package]
 name = "general_notifier"
 version = "0.1.0"
-authors = ["zak <zakmikellides@gmail.com>"]
+authors = ["zak"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "sqlite"] }
-reqwest = { version = "0.11", features = ["rustls-tls"] }
 anyhow = "1.0"
 dotenv = "0.15"
-log = "0.4"
-pretty_env_logger = "0.4"
+tracing = "0.1.23"
+tracing-subscriber = "0.2"
+
+[dependencies.tokio]
+features = ["rt-multi-thread", "rt", "macros"]
+version = "1"
+
+[dependencies.sqlx]
+features = ["runtime-tokio-rustls", "sqlite", "offline"]
+version = "0.5.5"
+
+[dependencies.reqwest]
+features = ["rustls-tls", "brotli", "cookies"]
+version = "0.11"
+
+[dependencies.serenity]
+default-features = false
+features = ["cache", "client", "gateway", "http", "model", "standard_framework", "rustls_backend"]
+version = "0.10"
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.test]
+split-debuginfo = "unpacked"
