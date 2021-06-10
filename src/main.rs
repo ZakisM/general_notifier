@@ -7,7 +7,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
-use reqwest::ClientBuilder;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::ConnectOptions;
 
@@ -15,6 +14,7 @@ mod conduit;
 mod discord;
 mod models;
 mod util;
+mod worker;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -40,32 +40,11 @@ async fn main() -> Result<()> {
 
     migrations.run(&*pool).await?;
 
-    // let user = User::new("abc123", 12345, "Zak");
-    //
-    // conduit::user::insert(&pool, user).await?;
+    let (responder_tx, responder_rx) = tokio::sync::mpsc::channel(100);
 
-    let client = ClientBuilder::new()
-        .brotli(true)
-        .cookie_store(true)
-        .build()?;
+    tokio::task::spawn(worker::alert::start(pool.clone(), responder_tx.clone()));
 
-    // let res = client
-    //     .get("https://www.amazon.co.uk/s?k=lg+27gp950-b&ref=nb_sb_noss_1")
-    //     .send()
-    //     .await?
-    //     .text()
-    //     .await?;
-    //
-    // dbg!(&res);
-
-    // if res
-    //     .lines()
-    //     .any(|l| l.to_lowercase().contains("version: 21.04"))
-    // {
-    //     info!("Found");
-    // }
-
-    tokio::task::block_in_place(|| discord::start(pool.clone())).await?;
+    tokio::task::block_in_place(|| discord::start(pool.clone(), responder_rx)).await?;
 
     Ok(())
 }

@@ -1,10 +1,9 @@
+use std::convert::TryInto;
+use std::iter::FromIterator;
 use std::sync::Arc;
 
 use anyhow::Context as ErrorContext;
 use anyhow::Result;
-use comfy_table::modifiers::UTF8_ROUND_CORNERS;
-use comfy_table::presets::UTF8_FULL;
-use comfy_table::{ColumnConstraint, Table};
 use serenity::async_trait;
 use serenity::client::{Client, Context, EventHandler};
 use serenity::framework::standard::{
@@ -15,9 +14,11 @@ use serenity::model::channel::Message;
 use serenity::prelude::TypeMapKey;
 use serenity::utils::MessageBuilder;
 use sqlx::SqlitePool;
+use tokio::sync::mpsc::Receiver;
 
 use crate::conduit;
 use crate::models::alert::Alert;
+use crate::models::response_message::ResponseMessage;
 
 const COMMAND_PREFIX: &str = "~";
 
@@ -70,7 +71,10 @@ async fn after(ctx: &Context, msg: &Message, command_name: &str, command_result:
     }
 }
 
-pub async fn start(sqlite_pool: Arc<SqlitePool>) -> Result<()> {
+pub async fn start(
+    sqlite_pool: Arc<SqlitePool>,
+    mut responder_rx: Receiver<ResponseMessage>,
+) -> Result<()> {
     let framework = StandardFramework::new()
         .configure(|c| c.with_whitespace(true).prefix(COMMAND_PREFIX))
         .after(after)
@@ -90,6 +94,16 @@ pub async fn start(sqlite_pool: Arc<SqlitePool>) -> Result<()> {
         data.insert::<Database>(sqlite_pool);
     }
 
+    let cache_http = client.cache_and_http.clone();
+
+    tokio::task::spawn(async move {
+        while let Some(response_message) = responder_rx.recv().await {
+            if let Err(e) = response_message.send(cache_http.clone()).await {
+                error!("Failed to send response_message: {}", e);
+            }
+        }
+    });
+
     Ok(client.start().await?)
 }
 
@@ -105,7 +119,15 @@ async fn add(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .get::<Database>()
         .context("Failed to read Database pool.")?;
 
-    let alert_count = conduit::alert::count(pool, msg.author.id.0).await?;
+    let alert_count = conduit::alert::count(
+        pool,
+        msg.author
+            .id
+            .0
+            .try_into()
+            .context("Failed to convert discord_id to i64")?,
+    )
+    .await?;
 
     let alert = Alert::from_args(&mut args, msg.author.id.0, alert_count + 1)?;
 
@@ -130,26 +152,45 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
         .get::<Database>()
         .context("Failed to read Database pool.")?;
 
-    let alerts = conduit::alert::list(pool, msg.author.id.0).await?;
-
-    let mut table = Table::new();
-    table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_header(vec!["", "URL", "Matching Text"]);
-
-    alerts.into_iter().for_each(|a| {
-        table.add_row(vec![format!("{}.", a.alert_number), a.url, a.matching_text]);
-    });
-
-    let column = table
-        .get_column_mut(1)
-        .context("Failed to format table to display results")?;
-
-    column.set_constraint(ColumnConstraint::MaxWidth(100));
+    let alerts = conduit::alert::list(
+        pool,
+        msg.author
+            .id
+            .0
+            .try_into()
+            .context("Failed to convert discord_id to i64")?,
+    )
+    .await?;
 
     let mut response = MessageBuilder::new();
-    response.push_codeblock_safe(table, None);
+
+    if !alerts.is_empty() {
+        let results: String = alerts
+            .into_iter()
+            .map(|a| format!("{}. [{}] - {}\n\n", a.alert_number, a.matching_text, a.url))
+            .collect();
+
+        // If message is too large then send it in chunks;
+        if results.len() > 1900 {
+            let results = results.chars().collect::<Vec<_>>();
+
+            for chunk in results.chunks(1900) {
+                let mut response = MessageBuilder::new();
+
+                response.push_codeblock_safe(String::from_iter(chunk), None);
+
+                dm_channel
+                    .send_message(ctx, |m| m.content(response))
+                    .await?;
+            }
+
+            return Ok(());
+        }
+
+        response.push_codeblock_safe(results, None);
+    } else {
+        response.push_codeblock_safe("You currently have 0 alerts.", None);
+    }
 
     dm_channel
         .send_message(ctx, |m| m.content(response))
@@ -172,7 +213,16 @@ async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
     let alert_number = args.next().context("Missing alert number")?.parse()?;
 
-    conduit::alert::delete(pool, msg.author.id.0, alert_number).await?;
+    conduit::alert::delete(
+        pool,
+        msg.author
+            .id
+            .0
+            .try_into()
+            .context("Failed to convert discord_id to i64")?,
+        alert_number,
+    )
+    .await?;
 
     dm_channel
         .send_message(ctx, |m| {

@@ -1,15 +1,17 @@
-use std::convert::TryInto;
-
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use sqlx::SqlitePool;
 
 use crate::models::alert::Alert;
 
-pub async fn count(pool: &SqlitePool, discord_id: u64) -> Result<i32> {
-    let discord_id: i64 = discord_id
-        .try_into()
-        .context("Failed to convert discord_id into i64")?;
+pub async fn all(pool: &SqlitePool) -> Result<Vec<Alert>> {
+    let alerts = sqlx::query_as!(Alert, "SELECT * FROM alert",)
+        .fetch_all(pool)
+        .await?;
 
+    Ok(alerts)
+}
+
+pub async fn count(pool: &SqlitePool, discord_id: i64) -> Result<i32> {
     let count = sqlx::query!(
         "SELECT COUNT(*) as count FROM alert WHERE discord_id = ?",
         discord_id
@@ -20,11 +22,7 @@ pub async fn count(pool: &SqlitePool, discord_id: u64) -> Result<i32> {
     Ok(count.count)
 }
 
-pub async fn list(pool: &SqlitePool, discord_id: u64) -> Result<Vec<Alert>> {
-    let discord_id: i64 = discord_id
-        .try_into()
-        .context("Failed to convert discord_id into i64")?;
-
+pub async fn list(pool: &SqlitePool, discord_id: i64) -> Result<Vec<Alert>> {
     let alerts = sqlx::query_as!(
         Alert,
         "SELECT * FROM alert WHERE discord_id = ?",
@@ -39,7 +37,7 @@ pub async fn list(pool: &SqlitePool, discord_id: u64) -> Result<Vec<Alert>> {
 pub async fn insert(pool: &SqlitePool, alert: Alert) -> Result<()> {
     let mut conn = pool.acquire().await?;
 
-    let row_id = sqlx::query!(
+    sqlx::query!(
         "INSERT INTO alert (alert_id, url, matching_text, discord_id, alert_number) VALUES ( ?1, ?2, ?3, ?4, ?5 )",
         alert.alert_id,
         alert.url,
@@ -47,24 +45,13 @@ pub async fn insert(pool: &SqlitePool, alert: Alert) -> Result<()> {
         alert.discord_id,
         alert.alert_number
     )
-    .execute(&mut conn)
-    .await?
-    .last_insert_rowid();
+        .execute(&mut conn)
+        .await?;
 
     Ok(())
 }
 
-pub async fn delete(pool: &SqlitePool, discord_id: u64, alert_number: u64) -> Result<()> {
-    let count = count(pool, discord_id).await?;
-
-    let discord_id: i64 = discord_id
-        .try_into()
-        .context("Failed to convert discord_id into i64")?;
-
-    let alert_number: i64 = alert_number
-        .try_into()
-        .context("Failed to convert alert_number into i64")?;
-
+pub async fn delete(pool: &SqlitePool, discord_id: i64, alert_number: i64) -> Result<()> {
     let mut conn = pool.acquire().await?;
 
     let rows_affected = sqlx::query!(
@@ -84,8 +71,8 @@ pub async fn delete(pool: &SqlitePool, discord_id: u64, alert_number: u64) -> Re
             discord_id,
             alert_number,
         )
-        .execute(&mut conn)
-        .await?;
+            .execute(&mut conn)
+            .await?;
 
         Ok(())
     }
