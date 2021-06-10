@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::env;
 use std::iter::FromIterator;
 use std::sync::Arc;
 
@@ -80,9 +81,9 @@ pub async fn start(
         .after(after)
         .group(&GENERAL_GROUP);
 
-    // let token = env::var("DISCORD_TOKEN").expect("Missing Discord Bot token");
+    let token = env::var("DISCORD_TOKEN").expect("Missing Discord Bot token");
 
-    let mut client = Client::builder("ODUxODgyOTY2NjUyMjg5MDU1.YL-v1g.AI6p-BwToRVNi_OqzT9nztsiINE")
+    let mut client = Client::builder(token)
         .event_handler(Handler)
         .framework(framework)
         .await
