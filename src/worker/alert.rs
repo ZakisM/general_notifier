@@ -3,6 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Result;
+use regex::RegexBuilder;
 use reqwest::{Client, ClientBuilder};
 use sqlx::SqlitePool;
 use tokio::sync::mpsc::Sender;
@@ -33,13 +34,17 @@ pub async fn start(pool: Arc<SqlitePool>, responder_tx: Sender<ResponseMessage>)
                     });
 
                 for (url, alerts) in alerts_grouped {
-                    tokio::task::spawn(check_alert(
+                    if let Err(e) = check_alert(
                         pool.clone(),
                         client.clone(),
                         url,
                         alerts,
                         responder_tx.clone(),
-                    ));
+                    )
+                    .await
+                    {
+                        error!("Failed to check_alert: {}", e);
+                    }
                 }
             }
             Err(e) => error!("Failed to read all alerts: {}", e),
@@ -56,15 +61,17 @@ pub async fn check_alert(
     alerts: Vec<Alert>,
     responder_tx: Sender<ResponseMessage>,
 ) -> Result<()> {
-    let res = client.get(&url).send().await?.text().await?;
+    let splash_url = format!("http://splash:8050/render.html?url={}&timeout=10", url);
+    let res = client.get(&splash_url).send().await?.text().await?;
 
     info!("Sent request to {}", &url);
 
     for alert in alerts {
-        if res.lines().any(|l| {
-            l.to_lowercase()
-                .contains(&alert.matching_text.to_lowercase())
-        }) {
+        let regex = RegexBuilder::new(&alert.matching_text)
+            .case_insensitive(true)
+            .build()?;
+
+        if regex.captures(&res).is_some() {
             responder_tx
                 .send(ResponseMessage {
                     discord_id: alert.discord_id,

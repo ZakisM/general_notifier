@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use anyhow::Context as ErrorContext;
 use anyhow::Result;
+use regex::RegexBuilder;
 use serenity::async_trait;
 use serenity::client::{Client, Context, EventHandler};
 use serenity::framework::standard::{
@@ -131,6 +132,10 @@ async fn add(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     .await?;
 
     let alert = Alert::from_args(&mut args, msg.author.id.0, alert_count + 1)?;
+
+    let _ = RegexBuilder::new(&alert.matching_text)
+        .case_insensitive(true)
+        .build()?;
 
     conduit::alert::insert(pool, alert).await?;
 

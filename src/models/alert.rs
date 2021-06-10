@@ -59,7 +59,7 @@ impl Alert {
 
         Ok(Self::new(
             url.to_string(),
-            matching_text.to_string(),
+            matching_text.replace("'''", "\"").replace("~", ""),
             discord_id,
             alert_number,
         ))
