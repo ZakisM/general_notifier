@@ -11,9 +11,6 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM $BASE_CHEF_IMAGE as cacher
 WORKDIR app
 COPY --from=planner /app/recipe.json recipe.json
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./Cargo.toml ./Cargo.toml
-COPY ./src ./src
 RUN cargo chef cook --release --recipe-path recipe.json
 
 FROM $BASE_IMAGE as builder

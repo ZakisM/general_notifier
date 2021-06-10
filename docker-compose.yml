@@ -3,7 +3,15 @@ version: '3'
 services:
   backend:
     image: zakism/general-notifier:latest
+    depends_on:
+      - splash
     environment:
       - DISCORD_TOKEN=$DISCORD_TOKEN
     volumes:
       - ./general_notifier_data:/data
+
+  splash:
+    image: scrapinghub/splash:master
+    ports:
+      - 127.0.0.1:8050:8050
+    restart: always

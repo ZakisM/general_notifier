@@ -11,6 +11,7 @@ anyhow = "1.0"
 dotenv = "0.15"
 tracing = "0.1.23"
 tracing-subscriber = "0.2"
+regex = "1.5"
 
 [dependencies.tokio]
 features = ["rt-multi-thread", "rt", "macros"]
