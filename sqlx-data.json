@@ -1,11 +1,11 @@
 {
   "db": "SQLite",
-  "03f8c20239ed0b5eb36e355d2110be6c66fab43987c6374a4d49a358685261d0": {
-    "query": "INSERT INTO alert (alert_id, url, matching_text, discord_id, alert_number) VALUES ( ?1, ?2, ?3, ?4, ?5 )",
+  "4f3f7a0764ea363ba6f5c775c3159df435d2e45faebe1cc07ce9fc070b775d11": {
+    "query": "INSERT INTO alert (alert_id, url, matching_text, discord_id) VALUES ( ?1, ?2, ?3, ?4 )",
     "describe": {
       "columns": [],
       "parameters": {
-        "Right": 5
+        "Right": 4
       },
       "nullable": []
     }
@@ -33,11 +33,6 @@
           "name": "discord_id",
           "ordinal": 3,
           "type_info": "Int64"
-        },
-        {
-          "name": "alert_number",
-          "ordinal": 4,
-          "type_info": "Int64"
         }
       ],
       "parameters": {
@@ -47,31 +42,12 @@
         false,
         false,
         false,
-        false,
         false
       ]
     }
   },
-  "6e180d0aaa32f3c5c264d7f308d697ae6a30678746b3a7babef2ca9d66ae8f9a": {
-    "query": "SELECT COUNT(*) as count FROM alert WHERE discord_id = ?",
-    "describe": {
-      "columns": [
-        {
-          "name": "count",
-          "ordinal": 0,
-          "type_info": "Int"
-        }
-      ],
-      "parameters": {
-        "Right": 1
-      },
-      "nullable": [
-        false
-      ]
-    }
-  },
-  "7fe5943d916a6ab46b79689d2f0fad1e0409f8e4963e9cc3b396767f5c8976b0": {
-    "query": "UPDATE alert SET alert_number = alert_number - 1 WHERE discord_id = ?1 AND alert_number > ?2",
+  "70277174140e289769264e19aaf778236c0bb7f166a6f13693c59a2f520612bc": {
+    "query": "DELETE FROM alert WHERE discord_id = ?1 AND alert_id = ?2",
     "describe": {
       "columns": [],
       "parameters": {
@@ -103,11 +79,6 @@
           "name": "discord_id",
           "ordinal": 3,
           "type_info": "Int64"
-        },
-        {
-          "name": "alert_number",
-          "ordinal": 4,
-          "type_info": "Int64"
         }
       ],
       "parameters": {
@@ -117,19 +88,8 @@
         false,
         false,
         false,
-        false,
         false
       ]
-    }
-  },
-  "d04307ed4caf1515724fd9a5a3334f13d4bc95fd97187b2f058e09da4c71b75a": {
-    "query": "DELETE FROM alert WHERE discord_id = ?1 and alert_number = ?2",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Right": 2
-      },
-      "nullable": []
     }
   }
 }

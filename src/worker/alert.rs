@@ -82,7 +82,7 @@ pub async fn check_alert(
                 })
                 .await?;
 
-            conduit::alert::delete(&pool, alert.discord_id, alert.alert_number).await?;
+            conduit::alert::delete(&pool, alert.discord_id, alert.alert_id).await?;
         }
     }
 
