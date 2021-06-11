@@ -164,7 +164,7 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
         let results: String = alerts
             .into_iter()
             .enumerate()
-            .map(|(i, a)| format!("{}.\n    ID: {}\n    Matching_text: {}\n    URL:{}\n", i + 1, a.alert_id, a.matching_text, a.url))
+            .map(|(i, a)| format!("{}.\n    ID: {}\n    Matching_text: {}\n    URL: {}\n", i + 1, a.alert_id, a.matching_text, a.url))
             .collect();
 
         // If message is too large then send it in chunks;
