@@ -47,13 +47,18 @@ async fn send_error_to_user(
 ) -> Result<()> {
     let dm_channel = msg.author.id.create_dm_channel(&ctx).await?;
 
+    let mut response = MessageBuilder::new();
+
+    response.push_codeblock_safe(
+        format!(
+            "Failed to run command \"{}{}\" due to error: {}",
+            COMMAND_PREFIX, command_name, e
+        ),
+        None,
+    );
+
     dm_channel
-        .send_message(ctx, |m| {
-            m.content(format!(
-                "Failed to run command \"{}{}\" due to error: {}",
-                COMMAND_PREFIX, command_name, e
-            ))
-        })
+        .send_message(ctx, |m| m.content(response))
         .await?;
 
     Ok(())
@@ -164,7 +169,15 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
         let results: String = alerts
             .into_iter()
             .enumerate()
-            .map(|(i, a)| format!("{}.\n    ID: {}\n    Matching_text: {}\n    URL: {}\n", i + 1, a.alert_id, a.matching_text, a.url))
+            .map(|(i, a)| {
+                format!(
+                    "{}.\n    ID: {}\n    Matching_text: {}\n    URL: {}\n",
+                    i + 1,
+                    a.alert_id,
+                    a.matching_text,
+                    a.url
+                )
+            })
             .collect();
 
         // If message is too large then send it in chunks;

@@ -15,11 +15,7 @@ pub struct Alert {
 }
 
 impl Alert {
-    pub fn new<T: AsRef<str>>(
-        url: T,
-        matching_text: T,
-        discord_id: i64,
-    ) -> Self {
+    pub fn new<T: AsRef<str>>(url: T, matching_text: T, discord_id: i64) -> Self {
         let url = url.as_ref().to_owned();
         let matching_text = matching_text.as_ref().to_owned();
 
