@@ -121,17 +121,7 @@ async fn add(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .get::<Database>()
         .context("Failed to read Database pool.")?;
 
-    let alert_count = conduit::alert::count(
-        pool,
-        msg.author
-            .id
-            .0
-            .try_into()
-            .context("Failed to convert discord_id to i64")?,
-    )
-    .await?;
-
-    let alert = Alert::from_args(&mut args, msg.author.id.0, alert_count + 1)?;
+    let alert = Alert::from_args(&mut args, msg.author.id.0)?;
 
     let _ = RegexBuilder::new(&alert.matching_text)
         .case_insensitive(true)
@@ -173,7 +163,8 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     if !alerts.is_empty() {
         let results: String = alerts
             .into_iter()
-            .map(|a| format!("{}. [{}] - {}\n\n", a.alert_number, a.matching_text, a.url))
+            .enumerate()
+            .map(|(i, a)| format!("{}.\n    ID: {}\n    Matching_text: {}\n    URL:{}\n", i + 1, a.alert_id, a.matching_text, a.url))
             .collect();
 
         // If message is too large then send it in chunks;
@@ -217,7 +208,7 @@ async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .get::<Database>()
         .context("Failed to read Database pool.")?;
 
-    let alert_number = args.next().context("Missing alert number")?.parse()?;
+    let alert_id = args.next().context("Missing alert id")?.parse()?;
 
     conduit::alert::delete(
         pool,
@@ -226,7 +217,7 @@ async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .0
             .try_into()
             .context("Failed to convert discord_id to i64")?,
-        alert_number,
+        alert_id,
     )
     .await?;
 

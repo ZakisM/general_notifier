@@ -4,7 +4,6 @@ CREATE TABLE alert
     url           TEXT   NOT NULL,
     matching_text TEXT   NOT NULL,
     discord_id    BIGINT NOT NULL,
-    alert_number  BIGINT NOT NULL,
 
     PRIMARY KEY (alert_id)
 );
