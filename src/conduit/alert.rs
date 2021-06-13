@@ -27,10 +27,11 @@ pub async fn insert(pool: &SqlitePool, alert: Alert) -> Result<()> {
     let mut conn = pool.acquire().await?;
 
     sqlx::query!(
-        "INSERT INTO alert (alert_id, url, matching_text, discord_id) VALUES ( ?1, ?2, ?3, ?4 )",
+        "INSERT INTO alert (alert_id, url, matching_text, non_matching, discord_id) VALUES ( ?1, ?2, ?3, ?4, ?5 )",
         alert.alert_id,
         alert.url,
         alert.matching_text,
+        alert.non_matching,
         alert.discord_id,
     )
     .execute(&mut conn)

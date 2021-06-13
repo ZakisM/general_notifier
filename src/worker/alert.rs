@@ -71,7 +71,7 @@ pub async fn check_alert(
             .case_insensitive(true)
             .build()?;
 
-        if regex.captures(&res).is_some() {
+        if regex.captures(&res).is_some() || alert.non_matching == 1 {
             responder_tx
                 .send(ResponseMessage {
                     discord_id: alert.discord_id,
