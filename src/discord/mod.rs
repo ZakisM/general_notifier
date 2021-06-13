@@ -171,11 +171,12 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
             .enumerate()
             .map(|(i, a)| {
                 format!(
-                    "{}.\n    ID: {}\n    Matching_text: {}\n    URL: {}\n",
+                    "{}.\n    Id: {}\n    Url: {}\n    Matching Text: {}\n    Non Matching: {}\n",
                     i + 1,
                     a.alert_id,
+                    a.url,
                     a.matching_text,
-                    a.url
+                    if a.non_matching == 1 { "True" } else { "False" },
                 )
             })
             .collect();

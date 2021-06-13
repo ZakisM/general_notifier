@@ -11,18 +11,25 @@ pub struct Alert {
     pub alert_id: String,
     pub url: String,
     pub matching_text: String,
+    pub non_matching: i64,
     pub discord_id: i64,
 }
 
 impl Alert {
-    pub fn new<T: AsRef<str>>(url: T, matching_text: T, discord_id: i64) -> Self {
+    pub fn new<T: AsRef<str>>(
+        url: T,
+        matching_text: T,
+        non_matching: i64,
+        discord_id: i64,
+    ) -> Self {
         let url = url.as_ref().to_owned();
         let matching_text = matching_text.as_ref().to_owned();
 
         Alert {
-            alert_id: hash_id!(url, matching_text, discord_id),
+            alert_id: hash_id!(url, matching_text, non_matching, discord_id),
             url,
             matching_text,
+            non_matching,
             discord_id,
         }
     }
@@ -40,6 +47,8 @@ impl Alert {
 
         let matching_text = args.next().context("Missing matching text.")?;
 
+        let non_matching = args.find(|a| *a == "-n").map(|_| 1).unwrap_or(0);
+
         let discord_id: i64 = discord_id
             .try_into()
             .context("Failed to convert discord_id into i64")?;
@@ -47,6 +56,7 @@ impl Alert {
         Ok(Self::new(
             url.to_string(),
             matching_text.replace("'''", "\"").replace("~", ""),
+            non_matching,
             discord_id,
         ))
     }

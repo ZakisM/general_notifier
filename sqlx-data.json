@@ -1,11 +1,11 @@
 {
   "db": "SQLite",
-  "4f3f7a0764ea363ba6f5c775c3159df435d2e45faebe1cc07ce9fc070b775d11": {
-    "query": "INSERT INTO alert (alert_id, url, matching_text, discord_id) VALUES ( ?1, ?2, ?3, ?4 )",
+  "5bb83c31ff8f83d7ce84216613fbc47126dc1a582ed60fa9af6c8fe4d18ef1af": {
+    "query": "INSERT INTO alert (alert_id, url, matching_text, non_matching, discord_id) VALUES ( ?1, ?2, ?3, ?4, ?5 )",
     "describe": {
       "columns": [],
       "parameters": {
-        "Right": 4
+        "Right": 5
       },
       "nullable": []
     }
@@ -30,8 +30,13 @@
           "type_info": "Text"
         },
         {
-          "name": "discord_id",
+          "name": "non_matching",
           "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "discord_id",
+          "ordinal": 4,
           "type_info": "Int64"
         }
       ],
@@ -39,6 +44,7 @@
         "Right": 1
       },
       "nullable": [
+        false,
         false,
         false,
         false,
@@ -76,8 +82,13 @@
           "type_info": "Text"
         },
         {
-          "name": "discord_id",
+          "name": "non_matching",
           "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "discord_id",
+          "ordinal": 4,
           "type_info": "Int64"
         }
       ],
@@ -85,6 +96,7 @@
         "Right": 0
       },
       "nullable": [
+        false,
         false,
         false,
         false,
