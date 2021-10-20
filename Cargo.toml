@@ -30,8 +30,7 @@ default-features = false
 features = ["cache", "client", "gateway", "http", "model", "standard_framework", "rustls_backend"]
 version = "0.10"
 
-[profile.dev]
-split-debuginfo = "unpacked"
+[profile.release]
+lto = 'fat'
+codegen-units = 1
 
-[profile.test]
-split-debuginfo = "unpacked"
