@@ -13,5 +13,5 @@ services:
   splash:
     image: scrapinghub/splash:master
     ports:
-      - 127.0.0.1:8050:8050
+      - "127.0.0.1:8050:8050"
     restart: always
