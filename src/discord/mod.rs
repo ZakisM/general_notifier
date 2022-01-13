@@ -222,7 +222,7 @@ async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .get::<Database>()
         .context("Failed to read Database pool.")?;
 
-    let alert_id = args.next().context("Missing alert id")?.parse()?;
+    let alert_id = args.next().context("Missing alert id")?;
 
     conduit::alert::delete(
         pool,
