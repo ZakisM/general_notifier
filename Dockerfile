@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=rust:1.52.1
+ARG BASE_IMAGE=rust:1.58
 ARG BASE_CHEF_IMAGE=lukemathwalker/cargo-chef:latest
 
 FROM $BASE_CHEF_IMAGE as planner

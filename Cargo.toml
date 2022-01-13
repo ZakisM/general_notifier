@@ -2,24 +2,24 @@
 name = "general_notifier"
 version = "0.1.0"
 authors = ["zak"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0"
 dotenv = "0.15"
-tracing = "0.1.23"
-tracing-subscriber = "0.2"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 regex = "1.5"
 
 [dependencies.tokio]
-features = ["rt-multi-thread", "rt", "macros"]
+features = ["rt-multi-thread", "macros"]
 version = "1"
 
 [dependencies.sqlx]
 features = ["runtime-tokio-rustls", "sqlite", "offline"]
-version = "0.5.5"
+version = "0.5"
 
 [dependencies.reqwest]
 features = ["rustls-tls", "brotli", "cookies"]

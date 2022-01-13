@@ -13,22 +13,20 @@ use crate::models::alert::Alert;
 use crate::models::response_message::ResponseMessage;
 
 pub async fn start(pool: Arc<SqlitePool>, responder_tx: Sender<ResponseMessage>) -> Result<()> {
-    let client = Arc::new(
-        ClientBuilder::new()
-            .brotli(true)
-            .cookie_store(true)
-            .timeout(Duration::from_secs(10))
-            .build()?,
-    );
+    let client = ClientBuilder::new()
+        .brotli(true)
+        .cookie_store(true)
+        .timeout(Duration::from_secs(10))
+        .build()?;
 
     loop {
         match conduit::alert::all(&pool).await {
             Ok(alerts) => {
                 /* Group the alerts with the same URL to avoid having to send the same HTTP request
                 multiple times */
-                let alerts_grouped: HashMap<String, Vec<Alert>> =
-                    alerts.into_iter().fold(HashMap::new(), |mut curr, next| {
-                        let url_alerts = curr.entry(next.url.clone()).or_default();
+                let alerts_grouped: HashMap<&str, Vec<&Alert>> =
+                    alerts.iter().fold(HashMap::new(), |mut curr, next| {
+                        let url_alerts = curr.entry(&next.url).or_default();
                         url_alerts.push(next);
                         curr
                     });
@@ -56,9 +54,9 @@ pub async fn start(pool: Arc<SqlitePool>, responder_tx: Sender<ResponseMessage>)
 
 pub async fn check_alert(
     pool: Arc<SqlitePool>,
-    client: Arc<Client>,
-    url: String,
-    alerts: Vec<Alert>,
+    client: Client,
+    url: &str,
+    alerts: Vec<&Alert>,
     responder_tx: Sender<ResponseMessage>,
 ) -> Result<()> {
     let splash_url = format!("http://splash:8050/render.html?url={}&timeout=10", url);
@@ -71,8 +69,10 @@ pub async fn check_alert(
             .case_insensitive(true)
             .build()?;
 
-        if alert.non_matching == 0 && regex.captures(&res).is_some()
-            || alert.non_matching == 1 && regex.captures(&res).is_none()
+        let captures = regex.captures(&res);
+
+        if alert.non_matching == 0 && captures.is_some()
+            || alert.non_matching == 1 && captures.is_none()
         {
             responder_tx
                 .send(ResponseMessage {
@@ -84,7 +84,7 @@ pub async fn check_alert(
                 })
                 .await?;
 
-            conduit::alert::delete(&pool, alert.discord_id, alert.alert_id).await?;
+            conduit::alert::delete(&pool, alert.discord_id, &alert.alert_id).await?;
         }
     }
 

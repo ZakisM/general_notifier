@@ -40,7 +40,7 @@ pub async fn insert(pool: &SqlitePool, alert: Alert) -> Result<()> {
     Ok(())
 }
 
-pub async fn delete(pool: &SqlitePool, discord_id: i64, alert_id: String) -> Result<()> {
+pub async fn delete(pool: &SqlitePool, discord_id: i64, alert_id: &str) -> Result<()> {
     let mut conn = pool.acquire().await?;
 
     let rows_affected = sqlx::query!(
