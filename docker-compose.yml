@@ -6,7 +6,7 @@ services:
     depends_on:
       - splash
     environment:
-      - DISCORD_TOKEN=$DISCORD_TOKEN
+      - DISCORD_TOKEN=ODUxODgyOTY2NjUyMjg5MDU1.YL-v1g.1fD6H7bLQY5_cEwmaAjs2aVbDDA
     volumes:
       - ./general_notifier_data:/data
 

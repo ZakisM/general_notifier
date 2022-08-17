@@ -13,6 +13,7 @@ use serenity::framework::standard::{
     Args, CommandError, CommandResult, StandardFramework,
 };
 use serenity::model::channel::Message;
+use serenity::prelude::GatewayIntents;
 use serenity::prelude::TypeMapKey;
 use serenity::utils::MessageBuilder;
 use sqlx::SqlitePool;
@@ -89,11 +90,14 @@ pub async fn start(
 
     let token = env::var("DISCORD_TOKEN").expect("Missing Discord Bot token");
 
-    let mut client = Client::builder(token)
-        .event_handler(Handler)
-        .framework(framework)
-        .await
-        .context("Error creating client")?;
+    let mut client = Client::builder(
+        token,
+        GatewayIntents::DIRECT_MESSAGES | GatewayIntents::MESSAGE_CONTENT,
+    )
+    .event_handler(Handler)
+    .framework(framework)
+    .await
+    .context("Error creating client")?;
 
     {
         let mut data = client.data.write().await;

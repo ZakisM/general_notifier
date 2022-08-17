@@ -19,7 +19,7 @@ version = "1"
 
 [dependencies.sqlx]
 features = ["runtime-tokio-rustls", "sqlite", "offline"]
-version = "0.5"
+version = "0.6"
 
 [dependencies.reqwest]
 features = ["rustls-tls", "brotli", "cookies"]
@@ -28,9 +28,9 @@ version = "0.11"
 [dependencies.serenity]
 default-features = false
 features = ["cache", "client", "gateway", "http", "model", "standard_framework", "rustls_backend"]
-version = "0.10"
+version = "0.11"
 
 [profile.release]
 lto = 'fat'
 codegen-units = 1
-
+strip = "symbols"

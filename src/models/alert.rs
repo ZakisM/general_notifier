@@ -16,12 +16,11 @@ pub struct Alert {
 }
 
 impl Alert {
-    pub fn new<T: AsRef<str>>(
-        url: T,
-        matching_text: T,
-        non_matching: i64,
-        discord_id: i64,
-    ) -> Self {
+    pub fn new<T, U>(url: T, matching_text: U, non_matching: i64, discord_id: i64) -> Self
+    where
+        T: AsRef<str>,
+        U: AsRef<str>,
+    {
         let url = url.as_ref().to_owned();
         let matching_text = matching_text.as_ref().to_owned();
 
@@ -54,8 +53,8 @@ impl Alert {
             .context("Failed to convert discord_id into i64")?;
 
         Ok(Self::new(
-            url.to_string(),
-            matching_text.replace("'''", "\"").replace("~", ""),
+            &url,
+            matching_text.replace("'''", "\"").replace('~', ""),
             non_matching,
             discord_id,
         ))

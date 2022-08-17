@@ -1,7 +1,7 @@
-ARG BASE_IMAGE=rust:1.58
+ARG BASE_IMAGE=rust:1.63
 
 FROM $BASE_IMAGE as builder
-WORKDIR app
+WORKDIR /app
 ENV SQLX_OFFLINE='true'
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
