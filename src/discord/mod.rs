@@ -107,9 +107,7 @@ pub async fn start(
     .await
     .context("Error creating client")?;
 
-    client.start().await?;
-
-    let cache_http = (client.cache, client.http);
+    let cache_http = (client.cache.clone(), client.http.clone());
 
     tokio::task::spawn(async move {
         while let Some(response_message) = responder_rx.recv().await {
@@ -118,6 +116,8 @@ pub async fn start(
             }
         }
     });
+
+    client.start().await?;
 
     Ok(())
 }
