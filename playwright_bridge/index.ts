@@ -1,4 +1,4 @@
-import {webkit, type Browser} from 'playwright';
+import {chromium, type Browser} from 'playwright';
 
 function invariant(condition: any, message: string): asserts condition {
     if (condition) return;
@@ -11,7 +11,7 @@ let browser: Browser;
 const getPageSource = async (url: string, timeout: number) => {
     if (!browser) {
         try {
-            browser = await webkit.launch();
+            browser = await chromium.launch({headless: true});
         } catch (error) {
             console.error(error);
             process.exit(1);
@@ -22,6 +22,10 @@ const getPageSource = async (url: string, timeout: number) => {
 
     try {
         const page = await browser.newPage();
+        await page.route(
+            '**/*.{css,png,jpg,jpeg,mp4,mp3,ttf,ttf2,woff,woff2,webp,svg,xml}',
+            (route) => route.abort(),
+        );
         await page.goto(url, {timeout: timeout * 1000});
 
         res = await page.content();

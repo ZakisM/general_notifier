@@ -8,7 +8,7 @@ services:
     environment:
       - DISCORD_TOKEN=$DISCORD_TOKEN
     volumes:
-      - ./general_notifier_data:/data
+      - ./general_notifier_data:/app/data
 
   playwright:
     image: zakism/general-notifier-playwright:latest
