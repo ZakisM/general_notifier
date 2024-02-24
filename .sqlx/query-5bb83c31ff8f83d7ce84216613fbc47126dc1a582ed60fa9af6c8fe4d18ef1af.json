@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO alert (alert_id, url, matching_text, non_matching, discord_id) VALUES ( ?1, ?2, ?3, ?4, ?5 )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "5bb83c31ff8f83d7ce84216613fbc47126dc1a582ed60fa9af6c8fe4d18ef1af"
+}

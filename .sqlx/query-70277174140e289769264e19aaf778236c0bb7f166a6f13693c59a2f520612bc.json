@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM alert WHERE discord_id = ?1 AND alert_id = ?2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "70277174140e289769264e19aaf778236c0bb7f166a6f13693c59a2f520612bc"
+}

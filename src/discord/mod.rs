@@ -1,14 +1,16 @@
-use std::convert::TryInto;
 use std::env;
 use std::fmt::Write;
 use std::iter::FromIterator;
+
 use std::sync::Arc;
 
 use anyhow::Context as ErrorContext;
 use anyhow::Result;
 use regex::RegexBuilder;
 use serenity::async_trait;
+use serenity::builder::CreateMessage;
 use serenity::client::{Client, Context, EventHandler};
+use serenity::framework::standard::Configuration;
 use serenity::framework::standard::{
     macros::{command, group, hook},
     Args, CommandError, CommandResult, StandardFramework,
@@ -19,6 +21,8 @@ use serenity::prelude::TypeMapKey;
 use serenity::utils::MessageBuilder;
 use sqlx::SqlitePool;
 use tokio::sync::mpsc::Receiver;
+use tracing::error;
+use tracing::info;
 
 use crate::conduit;
 use crate::models::alert::Alert;
@@ -59,9 +63,9 @@ async fn send_error_to_user(
         None,
     );
 
-    dm_channel
-        .send_message(ctx, |m| m.content(response))
-        .await?;
+    let message = CreateMessage::new().content(response.build());
+
+    dm_channel.send_message(&ctx, message).await?;
 
     Ok(())
 }
@@ -84,10 +88,12 @@ pub async fn start(
     sqlite_pool: Arc<SqlitePool>,
     mut responder_rx: Receiver<ResponseMessage>,
 ) -> Result<()> {
-    let framework = StandardFramework::new()
-        .configure(|c| c.with_whitespace(true).prefix(COMMAND_PREFIX))
-        .after(after)
-        .group(&GENERAL_GROUP);
+    let framework = StandardFramework::new().after(after).group(&GENERAL_GROUP);
+    framework.configure(
+        Configuration::new()
+            .with_whitespace(true)
+            .prefix(COMMAND_PREFIX),
+    );
 
     let token = env::var("DISCORD_TOKEN").expect("Missing Discord Bot token");
 
@@ -97,16 +103,13 @@ pub async fn start(
     )
     .event_handler(Handler)
     .framework(framework)
+    .type_map_insert::<Database>(sqlite_pool)
     .await
     .context("Error creating client")?;
 
-    {
-        let mut data = client.data.write().await;
+    client.start().await?;
 
-        data.insert::<Database>(sqlite_pool);
-    }
-
-    let cache_http = client.cache_and_http.clone();
+    let cache_http = (client.cache, client.http);
 
     tokio::task::spawn(async move {
         while let Some(response_message) = responder_rx.recv().await {
@@ -116,7 +119,7 @@ pub async fn start(
         }
     });
 
-    Ok(client.start().await?)
+    Ok(())
 }
 
 #[command]
@@ -131,7 +134,7 @@ async fn add(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .get::<Database>()
         .context("Failed to read Database pool.")?;
 
-    let alert = Alert::from_args(&mut args, msg.author.id.0)?;
+    let alert = Alert::from_args(&mut args, msg.author.id.get())?;
 
     let _ = RegexBuilder::new(&alert.matching_text)
         .case_insensitive(true)
@@ -140,9 +143,11 @@ async fn add(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     conduit::alert::insert(pool, alert).await?;
 
     dm_channel
-        .send_message(ctx, |m| {
-            m.content("Successfully added alert! Use ~list to see your current alerts")
-        })
+        .send_message(
+            ctx,
+            CreateMessage::new()
+                .content("Successfully added alert! Use ~list to see your current alerts"),
+        )
         .await?;
 
     Ok(())
@@ -162,7 +167,7 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
         pool,
         msg.author
             .id
-            .0
+            .get()
             .try_into()
             .context("Failed to convert discord_id to i64")?,
     )
@@ -203,7 +208,7 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
                 response.push_codeblock_safe(String::from_iter(chunk), None);
 
                 dm_channel
-                    .send_message(ctx, |m| m.content(response))
+                    .send_message(ctx, CreateMessage::new().content(response.build()))
                     .await?;
             }
 
@@ -216,7 +221,7 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     dm_channel
-        .send_message(ctx, |m| m.content(response))
+        .send_message(ctx, CreateMessage::new().content(response.build()))
         .await?;
 
     Ok(())
@@ -240,7 +245,7 @@ async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         pool,
         msg.author
             .id
-            .0
+            .get()
             .try_into()
             .context("Failed to convert discord_id to i64")?,
         alert_id,
@@ -248,9 +253,11 @@ async fn delete(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     .await?;
 
     dm_channel
-        .send_message(ctx, |m| {
-            m.content("Successfully deleted alert! Use ~list to see your current alerts")
-        })
+        .send_message(
+            ctx,
+            CreateMessage::new()
+                .content("Successfully deleted alert! Use ~list to see your current alerts"),
+        )
         .await?;
 
     Ok(())

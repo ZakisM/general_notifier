@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate tracing;
-
 use std::env;
 use std::path::Path;
 use std::str::FromStr;
@@ -29,7 +26,7 @@ async fn main() -> Result<()> {
     let database_url = env::var("DATABASE_URL")?;
 
     let mut connect_options = SqliteConnectOptions::from_str(&database_url)?;
-    connect_options.disable_statement_logging();
+    connect_options = connect_options.disable_statement_logging();
 
     let pool = Arc::new(
         SqlitePoolOptions::new()

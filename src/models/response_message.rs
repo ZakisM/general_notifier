@@ -1,9 +1,10 @@
-use std::convert::TryInto;
-use std::sync::Arc;
+use std::{borrow::Borrow, convert::TryInto, sync::Arc};
 
 use anyhow::{Context, Result};
-use serenity::model::id::UserId;
-use serenity::CacheAndHttp;
+use serenity::{
+    all::{Cache, CreateMessage, Http},
+    model::id::UserId,
+};
 
 #[derive(Debug)]
 pub struct ResponseMessage {
@@ -12,16 +13,20 @@ pub struct ResponseMessage {
 }
 
 impl ResponseMessage {
-    pub async fn send(&self, cache_http: Arc<CacheAndHttp>) -> Result<()> {
+    pub async fn send(&self, cache_http: (Arc<Cache>, Arc<Http>)) -> Result<()> {
+        let cache_http = (cache_http.0.borrow(), cache_http.1.as_ref());
+
         let discord_id = self
             .discord_id
             .try_into()
             .context("Failed to convert discord_id into i64 to send message.")?;
 
-        let dm_channel = UserId(discord_id).create_dm_channel(&cache_http).await?;
+        let dm_channel = UserId::new(discord_id)
+            .create_dm_channel(cache_http)
+            .await?;
 
         dm_channel
-            .send_message(&cache_http.http, |m| m.content(&self.message))
+            .send_message(cache_http, CreateMessage::new().content(&self.message))
             .await?;
 
         Ok(())
