@@ -53,7 +53,7 @@ impl Alert {
             .context("Failed to convert discord_id into i64")?;
 
         Ok(Self::new(
-            &url,
+            url,
             matching_text.replace("'''", "\"").replace('~', ""),
             non_matching,
             discord_id,

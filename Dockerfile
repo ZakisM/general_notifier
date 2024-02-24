@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=rust:1.63
+ARG BASE_IMAGE=rust:latest
 
 FROM $BASE_IMAGE as builder
 WORKDIR /app

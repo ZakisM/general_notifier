@@ -54,7 +54,7 @@ pub async fn delete(pool: &SqlitePool, discord_id: i64, alert_id: &str) -> Resul
 
     if rows_affected == 0 {
         bail!("Could not find this alert to delete")
-    } else {
-        Ok(())
     }
+
+    Ok(())
 }

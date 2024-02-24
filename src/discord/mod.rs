@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 use std::env;
+use std::fmt::Write;
 use std::iter::FromIterator;
 use std::sync::Arc;
 
@@ -170,20 +171,27 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     let mut response = MessageBuilder::new();
 
     if !alerts.is_empty() {
-        let results: String = alerts
-            .into_iter()
-            .enumerate()
-            .map(|(i, a)| {
-                format!(
-                    "{}.\n    Id: {}\n    Url: {}\n    Matching Text: {}\n    Non Matching: {}\n",
-                    i + 1,
-                    a.alert_id,
-                    a.url,
-                    a.matching_text,
-                    if a.non_matching == 1 { "True" } else { "False" },
-                )
-            })
-            .collect();
+        let results: String =
+            alerts
+                .iter()
+                .enumerate()
+                .fold(String::new(), |mut output, (i, a)| {
+                    let _ = write!(
+                        output,
+                        r#"{}.
+    Id: {}
+    Url: {}
+    Matching Text: {}
+    Non Matching: {}
+"#,
+                        i + 1,
+                        a.alert_id,
+                        a.url,
+                        a.matching_text,
+                        if a.non_matching == 1 { "True" } else { "False" },
+                    );
+                    output
+                });
 
         // If message is too large then send it in chunks;
         if results.len() > 1900 {
