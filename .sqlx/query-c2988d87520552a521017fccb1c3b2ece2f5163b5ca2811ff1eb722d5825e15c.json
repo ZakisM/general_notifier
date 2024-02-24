@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM alert",
+  "describe": {
+    "columns": [
+      {
+        "name": "alert_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "url",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "matching_text",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "non_matching",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "discord_id",
+        "ordinal": 4,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c2988d87520552a521017fccb1c3b2ece2f5163b5ca2811ff1eb722d5825e15c"
+}

@@ -6,7 +6,7 @@ ENV SQLX_OFFLINE='true'
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./src ./src
-COPY ./sqlx-data.json ./sqlx-data.json
+COPY ./.sqlx ./.sqlx
 RUN mkdir -p data
 RUN cargo build --release
 

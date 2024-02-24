@@ -7,6 +7,7 @@ use regex::RegexBuilder;
 use reqwest::{Client, ClientBuilder};
 use sqlx::SqlitePool;
 use tokio::sync::mpsc::Sender;
+use tracing::{error, info};
 
 use crate::conduit;
 use crate::models::alert::Alert;

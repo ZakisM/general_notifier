@@ -34,7 +34,7 @@ pub async fn insert(pool: &SqlitePool, alert: Alert) -> Result<()> {
         alert.non_matching,
         alert.discord_id,
     )
-    .execute(&mut conn)
+    .execute(&mut *conn)
     .await?;
 
     Ok(())
@@ -48,7 +48,7 @@ pub async fn delete(pool: &SqlitePool, discord_id: i64, alert_id: &str) -> Resul
         discord_id,
         alert_id,
     )
-    .execute(&mut conn)
+    .execute(&mut *conn)
     .await?
     .rows_affected();
 
