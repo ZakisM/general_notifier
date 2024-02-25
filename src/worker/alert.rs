@@ -49,7 +49,7 @@ pub async fn start(pool: Arc<SqlitePool>, responder_tx: Sender<ResponseMessage>)
             Err(e) => error!("Failed to read all alerts: {}", e),
         }
 
-        tokio::time::sleep(Duration::from_secs(60 * 5)).await;
+        tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
 
@@ -60,8 +60,8 @@ pub async fn check_alert(
     alerts: Vec<&Alert>,
     responder_tx: Sender<ResponseMessage>,
 ) -> Result<()> {
-    let splash_url = format!("http://splash:8050/render.html?url={}&timeout=10", url);
-    let res = client.get(&splash_url).send().await?.text().await?;
+    let playwright_url = format!("http://playwright:8050/?url={}&timeout=10", url);
+    let res = client.get(&playwright_url).send().await?.text().await?;
 
     info!("Sent request to {}", &url);
 
