@@ -1,6 +1,6 @@
 services:
   backend:
-    image: zakism/general-notifier:latest
+    image: zakism/general-notifier:master
     depends_on:
       - playwright
     environment:
@@ -9,7 +9,7 @@ services:
       - ./general_notifier_data:/app/data
 
   playwright:
-    image: zakism/general-notifier-playwright:latest
+    image: zakism/general-notifier-playwright:master
     ports:
       - "127.0.0.1:8050:8050"
     restart: always
