@@ -49,7 +49,7 @@ pub async fn start(pool: Arc<SqlitePool>, responder_tx: Sender<ResponseMessage>)
             Err(e) => error!("Failed to read all alerts: {}", e),
         }
 
-        tokio::time::sleep(Duration::from_secs(5)).await;
+        tokio::time::sleep(Duration::from_secs(60 * 5)).await;
     }
 }
 
