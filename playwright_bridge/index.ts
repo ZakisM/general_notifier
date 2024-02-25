@@ -1,4 +1,4 @@
-import {chromium, type Browser} from 'playwright';
+import {webkit, type Browser} from 'playwright';
 
 function invariant(condition: any, message: string): asserts condition {
     if (condition) return;
@@ -11,7 +11,7 @@ let browser: Browser;
 const getPageSource = async (url: string, timeout: number) => {
     if (!browser) {
         try {
-            browser = await chromium.launch({headless: true});
+            browser = await webkit.launch({headless: true});
         } catch (error) {
             console.error(error);
             process.exit(1);
