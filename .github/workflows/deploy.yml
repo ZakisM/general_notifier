@@ -1,4 +1,4 @@
-name: Build and Deploy images
+name: Build and Push images
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-push-general-notifier:
-    name: Build and Deploy general-notifier
+    name: Build and Push general-notifier
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,7 +34,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
   build-and-push-general-notifier-playwright:
-    name: Build and Deploy general-notifier-playwright
+    name: Build and Push general-notifier-playwright
     runs-on: ubuntu-latest
     permissions:
       contents: read
