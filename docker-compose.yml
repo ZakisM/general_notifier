@@ -4,7 +4,7 @@ services:
     depends_on:
       - playwright
     environment:
-      - DISCORD_TOKEN=$DISCORD_TOKEN
+      - NOTIFY_DISCORD_TOKEN=$NOTIFY_DISCORD_TOKEN
     volumes:
       - ./general_notifier_data:/app/data
 

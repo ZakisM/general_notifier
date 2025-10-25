@@ -95,7 +95,7 @@ pub async fn start(
             .prefix(COMMAND_PREFIX),
     );
 
-    let token = env::var("DISCORD_TOKEN").expect("Missing Discord Bot token");
+    let token = env::var("NOTIFY_DISCORD_TOKEN").expect("Missing Discord Bot token");
 
     let mut client = Client::builder(
         token,
